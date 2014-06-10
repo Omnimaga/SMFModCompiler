@@ -1,0 +1,13 @@
+nbproject/project.properties
+nbproject/project.xml
+nbproject/private/private.properties
+nbproject/private/config.properties
+nbproject/genfiles.properties
+nbproject/build-impl.xml
+manifest.mf
+build/classes/com/up/smfmc/Main.class
+build/classes/com/up/smfmc/Diff.class
+build/classes/com/up/smfmc/Diff$Method.class
+build/classes/.netbeans_update_resources
+build/classes/.netbeans_automatic_build
+build.xml

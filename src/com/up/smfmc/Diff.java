@@ -15,7 +15,8 @@ public class Diff {
     }
 
     public Diff(String file, String line, String content, Method method) {
-        this.file = file.replace("./Sources", "$sourcedir").replace("./Themes", "$themedir");
+        this.file = file.replace("./Sources", "$sourcedir").replace("./Themes/default", "$themedir").replace("./Themes/core", "$themedir");
+        if (this.file.indexOf("./", 2) == -1 && this.file.contains("./")) this.file = this.file.replace("./", "$boarddir/");
         this.line = line;
         this.content = content;
         this.method = method;

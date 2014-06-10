@@ -11,9 +11,12 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 /**
  *
@@ -46,7 +49,7 @@ public class Main {
             out.putNextEntry(new ZipEntry("modification.xml"));
             out.write(mod.getBytes());
             out.close();
-        } catch (Exception e) {
+        } catch (ParserConfigurationException | SAXException | IOException | DOMException e) {
             e.printStackTrace();
         }
     }
@@ -91,6 +94,26 @@ public class Main {
     }
     
     public static ArrayList<Diff> diff(String[] lines1, String[] lines2, String file) {
+        if (linesContain(lines1, "?>")) {
+            while (!lines1[lines1.length - 1].equals("?>") || lines1[lines1.length - 1].equals("")) {
+                String[] temp = new String[lines1.length - 1];
+                System.arraycopy(lines1, 0, temp, 0, lines1.length - 1);
+                lines1 = temp;
+            }
+            String[] temp = new String[lines1.length - 1];
+            System.arraycopy(lines1, 0, temp, 0, lines1.length - 1);
+            lines1 = temp;
+        }
+        if (linesContain(lines2, "?>")) {
+            while (!lines2[lines2.length - 1].equals("?>") || lines2[lines2.length - 1].equals("")) {
+                String[] temp = new String[lines2.length - 1];
+                System.arraycopy(lines2, 0, temp, 0, lines2.length - 1);
+                lines2 = temp;
+            }
+            String[] temp = new String[lines2.length - 1];
+            System.arraycopy(lines2, 0, temp, 0, lines2.length - 1);
+            lines2 = temp;
+        }
         ArrayList<Diff> diffs = new ArrayList<>();
         int i1 = 0;
         int i2 = 0;
@@ -99,11 +122,22 @@ public class Main {
                 Diff d = null;
                 int start = i2;
                 //Test for insert
-                while (!linesMatch(lines1, lines2, i1, ++i2, 2)) {
+                while (!linesMatch(lines1, lines2, i1, ++i2, 3)) {
                     if (i2 >= lines2.length) {
                         //Test for replace
-                        
-                        
+                        int start1 = i1;
+                        i1++;
+                        i2 = start;
+                        while (!linesMatch(lines1, lines2, i1, ++i2, 3)) {
+                            if (i2 >= lines2.length) {
+                                i1++;
+                                if (i1 >= lines1.length) break;
+                                i2 = start;
+                            }
+                        }
+                        if (i2 < lines2.length) {
+                            d = new Diff(file, join(lines1, "\n", start1, i1 - 1), join(lines2, "\n", start, i2 - 1), Diff.Method.replace);
+                        }
                         //no replace? end then
                         if (d == null) {
                             d = new Diff(file, null, join(lines2, "\n", start, lines2.length - 1), Diff.Method.end);
@@ -111,9 +145,8 @@ public class Main {
                         break;
                     }
                 }
-//                lines1[71].equals(lines2[75]);
                 if (d == null) {
-                    d = new Diff(file, join(lines1, "\n", Math.max(0, i1 - 4), i1), join(lines2, "\n", start, i2 - 1), Diff.Method.before);
+                    d = new Diff(file, join(lines1, "\n", Math.max(0, i1 - 3), i1), join(lines2, "\n", start, i2 - 1), Diff.Method.before);
                 }
                 diffs.add(d);
             }
@@ -132,7 +165,24 @@ public class Main {
     }
     
     public static boolean linesMatch(String[] arr1, String[] arr2, int start1, int start2, int length) {
-        for (int x = 0; x < length; x++) if (start1 + x < arr1.length && start2 + x < arr2.length) if(!arr1[start1 + x].equals(arr2[start2 + x])) return false;
+        if (start1 >= arr1.length || start2 >= arr2.length) {
+            return false;
+        }
+        for (int x = 0; x < length; x++) {
+            if (start1 + x < arr1.length && start2 + x < arr2.length) {
+                if(!arr1[start1 + x].equals(arr2[start2 + x])) {
+                    return false;
+                }
+            }
+        }
         return true;
+    }
+    public static boolean linesContain(String[] arr, String line) {
+        for (int x = 0; x < arr.length; x++) {
+            if(arr[x].equals(line)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
